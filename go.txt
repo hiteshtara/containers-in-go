@@ -199,3 +199,273 @@ func Sum(nums ...int) int {
     }
     return res
 }
+
++++++++++++++++++++++++++++++++
+var m map[string]int                // m == nil, len(m) == 0
+m1 := make(map[string]float64)      // empty map of string-float64 pairs
+m2 := make(map[string]float64, 100) // preallocate room for 100 entries
+m3 := map[string]float64{
+    "e":  2.71828,
+    "pi": 3.1416,
+}
+fmt.Println(len(m1), len(m2), len(m3)) // 0 0 2
+The default zero value of a map is nil. A nil map is equivalent to an empty map except that no elements can be added.
+You create a map either by a map literal or a call to the make function, which takes an optional capacity as argument.
+The built-in len function retrieves the number of key-value pairs.
+
+Add, find and delete
+
+m := make(map[string]float64)
+
+m["pi"] = 3.1416 // Add a new key-value pair.
+fmt.Println(m)   // map[pi:3.1416]
+
+v1 := m["pi"]  // v1 == 3.1416
+v2 := m["foo"] // v2 == 0 (zero value)
+
+_, exists := m["pi"] // exists == true
+_, exists = m["foo"] // exists == false
+
+if x, ok := m["pi"]; ok { // Prints 3.1416.
+    fmt.Println(x)
+}
+
+delete(m, "pi") // Delete a key-value pair.
+fmt.Println(m)  // map[]
+Iteration
+m := map[string]float64{
+    "e":  2.71828,
+    "pi": 3.1416,
+}
+for key, value := range m { // order not specified 
+    fmt.Println(key, value)
+}
+Check if a map contains a key
+m := map[string]float64{"pi": 3.1416}
+
+v1 := m["pi"]  // v1 == 3.1416
+v2 := m["foo"] // v2 == 0.0 (zero value)
+
+_, exists := m["pi"] // exists == true
+
+if x, ok := m["pi"]; ok {
+    fmt.Println(x) // 3.1416
+}
+Check if a map is empty
+if len(m) == 0 {
+    // m is empty
+}
+Count elements in a map
+m := map[string]int{
+    "key1": 1,
+    "key2": 10,
+    "key3": 100,
+}
+fmt.Println(len(m))  // 3
+Get slices of keys and values from a map
+keys := make([]keyType, 0, len(myMap))
+values := make([]valueType, 0, len(myMap))
+
+for k, v := range myMap {
+	keys = append(keys, k)
+	values = append(values, v)
+}
+
+Sort a map by key or value
+ map is an unordered collection of key-value pairs.
+If you need a stable iteration order, you must maintain a separate data structure.
+This example uses a sorted slice of keys to print a map[string]int in key order.
+m := map[string]int{"Alice": 23, "Eve": 2, "Bob": 25}
+
+keys := make([]string, 0, len(m))
+for k := range m {
+	keys = append(keys, k)
+}
+sort.Strings(keys)
+
+for _, k := range keys {
+	fmt.Println(k, m[k])
+}
+
+Format a string without printing it
+
+s := fmt.Sprintf("Size: %d MB.", 85) // s == "Size: 85 MB."
+
+Type rune: a Unicode code point
+The rune type is an alias for int32, and is used to emphasize than an integer represents a code point.
+CII defines 128 characters, identified by the code points 0–127. It covers English letters, Latin numbers, and a few other characters.
+Unicode, which is a superset of ASCII, defines a codespace of 1,114,112 code points. Unicode version 10.0 covers 139 modern and historic scripts (including runes, but not Klingon) as well as multiple symbol sets.
+Strings and UTF-8
+Note that a string is a sequence of bytes, not runes.
+However, strings often contain Unicode text encoded in UTF-8, which encodes all Unicode code points using one to four bytes. Since Go source code itself is encoded as UTF-8, string literals will automatically get this encoding.
+For simple cases where performance is a non-issue, fmt.Sprintf is your friend.
+s := fmt.Sprintf("Size: %d MB.", 85) // s == "Size: 85 MB."
+Fast concatenation with a string builder
+The strings.Builder type is used to efficiently concatenate strings using write methods.
+
+It offers a subset of the bytes.Buffer methods that allows it to safely avoid redundant copying.
+The Grow method can be used to preallocate memory when the maximum size of the string is known.
+var b strings.Builder
+b.Grow(32)
+for i, p := range []int{2, 3, 5, 7, 11, 13} {
+    fmt.Fprintf(&b, "%d:%d, ", i+1, p)
+}
+s := b.String()   // no copying
+s = s[:b.Len()-2] // no copying (removes trailing ", ")
+fmt.Println(s)
+1:2, 2:3, 3:5, 4:7, 5:11, 6:13
+var buf bytes.Buffer
+for i, p := range []int{2, 3, 5, 7, 11, 13} {
+    fmt.Fprintf(&buf, "%d:%d, ", i+1, p)
+}
+buf.Truncate(buf.Len() - 2) // Remove trailing ", "
+s := buf.String()           // Copy into a new string
+fmt.Println(s)
+buf := []byte("Size: ")
+buf = strconv.AppendInt(buf, 85, 10)
+buf = append(buf, " MB."...)
+s := string(buf)
+buf := make([]byte, 0, 16)
+buf = append(buf, "Size: "...)
+buf = strconv.AppendInt(buf, 85, 10)
+buf = append(buf, " MB."...)
+s := string(buf)
+How to split a string into a slice
+s := strings.Split("a,b,c", ",")
+fmt.Println(s)
+// Output: [a b c]
+Use the strings.Fields function to split a string into substrings removing white space.
+s := strings.Fields(" a \t b \n")
+fmt.Println(s)
+// Output: [a b]
+if "Foo" == "Bar" {
+    fmt.Println("Foo and Bar are equal.")
+} else {
+    fmt.Println("Foo and Bar are not equal.")
+}
+// Output: Foo and Bar are not equal.
+Use <, >, <= or >= to determine lexical order.
+
+f "Foo" < "Bar" {
+    fmt.Println("Foo comes before Bar.")
+} else {
+    fmt.Println("Foo does not come before Bar.")
+}
+// Output: Foo does not come before Bar.
+Convert string to/from byte slice
+When you convert a string to a byte slice, you get a slice that contains the bytes of the string.
+fmt.Println([]byte("abc日")
+// [97 98 99 230 151 165]
+Converting a slice of bytes to a string yields a string whose bytes are the elements of the slice.
+b := []byte{'a', 'b', 'c', '\xe6', '\x97', '\xa5'}
+s := string(b)
+fmt.Println(s)
+// Output: abc日
+Convert string to/from rune slice
+Converting a string to a slice of runes yields a slice whose elements are the Unicode code points of the string.
+s := "abc日"
+r := []rune(s)
+fmt.Printf("%v\n", r) // [97 98 99 26085]
+fmt.Printf("%U\n", r) // [U+0061 U+0062 U+0063 U+65E5]
+Rune slice to string
+Converting a slice of runes to a string yields a string that is the concatenation of the runes converted to UTF-8 encoded strings.
+
+Values outside the range of valid Unicode code points are converted to \uFFFD, the Unicode replacement character �.
+r := []rune{'\u0061', '\u0062', '\u0063', '\u65E5', -1}
+s := string(r)
+fmt.Println(s) // abc日�
+Convert int/int64 to string
+int to string
+Use the strconv.Itoa function to convert an int to a decimal string.
+str := strconv.Itoa(123) // str == "123"
+nt64 to string
+Use strconv.FormatInt to format an integer in a given base.
+var n int64 = 32
+str := strconv.FormatInt(n, 10) // decimal
+fmt.Println(str)                // 32
+var n int64 = 32
+str := strconv.FormatInt(n, 16) // hexadecimal
+fmt.Println(str)                // 20
+Use strconv.Atoi to convert/parse a string to an int.
+str := "123"
+if n, err := strconv.Atoi(str); err == nil {
+    fmt.Println(n+1)
+} else {
+    fmt.Println(str, "is not an integer.")
+}
+// Output: 124
+String to int64
+Use strconv.ParseInt to parse a decimal string (base 10) and check if it fits into a 64-bit signed integer.
+str := "123"
+n, err := strconv.ParseInt(str, 10, 64)
+if err == nil {
+    fmt.Printf("%d of type %T", n, n)
+}
+// Output: 123 of type int64
+he two numeric arguments represent a base (0, 2 to 36) and a bit size (0 to 64).
+
+If the first argument is 0, the base is implied by the string’s prefix: base 16 for "0x", base 8 for "0", and base 10 otherwise.
+
+The second argument specifies the integer type that the result must fit into. Bit sizes 0, 8, 16, 32, and 64 correspond to int, int8, int16, int32, and int64.
+Use the fmt.Sprintf method to convert a floating-point number to a string.
+s := fmt.Sprintf("%f", 123.456) // s == "123.456000"
+Use the strconv.ParseFloat function to convert a string to a floating-point number with the precision specified by bitSize: 32 for float32, or 64 for float64.
+
+func ParseFloat(s string, bitSize int) (float64, error)
+When bitSize is 32, the result still has type float64, but it will be convertible to float32 without changing its value.
+
+f := "3.14159265"
+if s, err := strconv.ParseFloat(f, 32); err == nil {
+    fmt.Println(s) // 3.1415927410125732
+}
+if s, err := strconv.ParseFloat(f, 64); err == nil {
+    fmt.Println(s) // 3.14159265
+}
+Raw string literals
+Raw string literals, delimited by back quotes, can contain line breaks.
+str := `First line
+Second line`
+fmt.Println(str)
+Raw strings literals are interpreted literally and backslashes have no special meaning.
+
+Interpreted string literals
+To insert escape characters, use interpreted string literals delimited by double quotes.
+str := "\tFirst line\n" +
+"Second line"
+fmt.Println(str)
+Remove duplicate whitespace
+space := regexp.MustCompile(`\s+`)
+s := space.ReplaceAllString("Hello  \t \n world!", " ")
+fmt.Printf("%q", s) // "Hello world!"
+\s+ is a regular expression:
+
+the character class \s matches a space, tab, new line, carriage return or form feed,
+and + says “one or more of those”.
+In other words, the code will replace each whitespace substring with a single space character.
+Use the strings.TrimSpace function to remove leading and trailing whitespace as defined by Unicode.
+s := strings.TrimSpace("\t Goodbye hair!\n ")
+fmt.Printf("%q", s) // "Goodbye hair!"
+s := strings.Repeat("da", 2) // "dada"
+Reverse a UTF-8 encoded string
+This function returns a string with the UTF-8 encoded characters of s in reverse order. Invalid UTF-8 sequences, if any, will be reversed byte by byte.
+func ReverseUTF8(s string) string {
+    res := make([]byte, len(s))
+    prevPos, resPos := 0, len(s)
+    for pos := range s {
+        resPos -= pos - prevPos
+        copy(res[resPos:], s[prevPos:pos])
+        prevPos = pos
+    }
+    copy(res[0:], s[prevPos:])
+    return string(res)
+}
+for _, s := range []string{
+	"Ångström",
+	"Hello, 世界",
+	"\xff\xfe\xfd", // invalid UTF-8
+} {
+	fmt.Printf("%q\n", ReverseUTF8(s))
+}
+"mörtsgnÅ"
+"界世 ,olleH"
+"\xfd\xfe\xff"
