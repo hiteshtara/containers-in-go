@@ -908,4 +908,131 @@ x = (*Point)(nil)
 fmt.Println(x == nil) // false
 In the second print statement, the concrete value of x equals nil, but its dynamic type is *Point, which is not nil.
 
+the empty interface in GO corresponds to a void pointer in C and an object reference in Java
+it specifies zero methods 
+interface {}
+a variable of empty interface type can hold values of any type since every type implements at least zero methods
 
+var a interface{}
+
+a = 24
+fmt.Printf("[%v, %T]\n", a, a) // "[24, int]"
+
+a = &Point{1, 2}
+fmt.Printf("[%v, %T]\n", a, a) // "[(1,2), *main.Point]"
+The fmt.Println function is a chief example from the standard library. It takes any number of arguments of any type.
+
+func Println(a ...interface{}) (n int, err error)
+Naed Return values 
+In GO return parameters may be named and used as regular variables when the function return these variables 
+func f() (i int, s string) {
+    i = 17
+    s = "abc"
+    return // same as return i, s
+}
+func RedFull (r Reader ,buf []byte)(n int,err error) {
+    for len(buf) >0 && err==nil {
+        var nr int
+        nr ,err = r.Read(buf)
+        n+=nrbuf = buf[nr:]
+    }
+    return 
+    }
+}
+
+go has two different error handling mechaniss
+most functions return errors
+only truely unrecoverable conditons such as out of range index ,produce run time exceptions
+go multivalued return makes it easy to return a detailed error mesage alongside the normal return value 
+By convention such messages have type error a smiple build in interface 
+type error interface {
+    Error() string
+}
+os.Open functin returns a non-nil errro when it fails to open the file 
+func Open(name String) (file *File, err error)
+f,err:=os.open('filename.txt')
+if err !=nil {
+    log.Fatal(err)
+}
+Custom errors 
+To create a simpsimple string only error you can use errors.New
+
+err := errors.New("Houston we have a problem")
+simple errors 
+// simple string based errors
+err1 := errors.New("math: square root of the neagative number")
+// with formating 
+err2 : = = fmt.Errorf(:math : square root of a neagative number %g",x)
+custom errors  with data 
+To define a custom error type you must satisfy the predeclared error interface
+type SyntexError struct {
+    Line int 
+    Col int 
+}
+func (e *SyntexError) Error() string {
+    return fmt.Sprintf("%d:%d: syntex error ",e.Line,e.Col)
+
+}
+
+type InternalError struct {
+    Path string
+}
+func (e *InternalError) Error() string {
+    return fmt.Sprintf("parse %v:internal error",e.Path)
+}
+
+if Foo is a function that can return a Syntex Error or an Internal  eror you may handle 
+the two cases lke that 
+
+if err: = Foo(); err ! = nil {
+
+}
+
+In go how to recover from the panic
+the built in  recover function can be used to regain  the contorol from the panicking situation 
+A call to recover stops the unwinding and return the argument passed to the panic 
+if the goroutine is not panicking returns nil
+because the only code that runs while unwinding is inside deferred functions recover is only useful only inside the deferred functions
+
+func main () {
+    n:= foo()
+    fmt.Println("main received",n )
+
+}
+function foo() int {
+    defer func() {
+        if err:= recover(); err!=nil {
+            fmt.Println(err)
+        }
+    }()
+    m:=1
+    panic("foo:fail")
+    m=2
+    return m
+}
+
+foo: fail
+main received 0
+since panic roccured before foo returned a value , n still has its initial zero value 
+
+To return  a value during a panic you must use named return value
+
+func main () {
+    n:= foo() 
+    fmt.Println("main received ",n)
+
+}
+  func foo() (m int) {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println(err)
+			m = 2
+		}
+	}()
+	m = 1
+	panic("foo: fail")
+	m = 3
+	return m
+}
+foo: fail
+main received 2
