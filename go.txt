@@ -1036,3 +1036,493 @@ func main () {
 }
 foo: fail
 main received 2
+stack traces are tyically printed to the console when a unexpected occurs they can be useful in debugging 
+not only do you see where the error happened but also how the program arreived in the place 
+he stack trace can be read from the bottom up:
+
+testing.(*T).Run has called testing.tRunner,
+which has called bit.TestMax,
+which has called bit.(*Set).Max,
+which has called panic,
+which has called testing.tRunner.func1.
+The indented lines show the source file and line number at which the function was called. The hexadecimal numbers refer to parameter values, including values of pointers and internal data structures. Stack Traces in Go has more details.
+
+Print a stack trace
+To print the stack trace for the current goroutine, use debug.PrintStack from package runtime/debug.
+
+You can also examine the current stack trace programatically by calling runtime.Stack.
+
+Level of detail
+The GOTRACEBACK variable controls the amount of output generated when a Go program fails.
+
+GOTRACEBACK=none omits the goroutine stack traces entirely.
+GOTRACEBACK=single (the default) prints a stack trace for the current goroutine, eliding functions internal to the run-time system. The failure prints stack traces for all goroutines if there is no current goroutine or the failure is internal to the run-time.
+GOTRACEBACK=all adds stack traces for all user-created goroutines.
+GOTRACEBACK=system is like all but adds stack frames for run-time functions and shows goroutines created internally by the run-time.
+switch time.Now().Weekday() {
+    case time.Saturday:
+    fmt.Println(" today is Saturday")
+    case time.Sunday:
+    fmt.Println("today is Sunday")
+    default:
+    fmt.Println('today is week day")
+    a switch statement runs the first case equal to the condition expresson 
+    The cases are evaluated from top to bottom stopping when a case succeds
+    unlike c and java the case expressions do not need to be constants
+    No condition
+    hour:= time.Now().Hour()
+    switch { // same as switch true
+case hour<12:
+fmt.Println("good morning")
+case hour<17:
+fmt.println(" good aftrnoon")
+default:
+fmt.Println(" good evening")
+
+    }
+}
+
+case lists
+
+func whiteSpace(c rune) bool {
+    switch c {
+    case ' ', '\t', '\n', '\f', '\r':
+        return true
+    }
+    return false
+}
+
+fallthrough
+
+switch 2 {
+    case 1: 
+    fmt.Println("1")
+    fallthrough
+    case 2 : 
+    fmt.println("2")
+    fallthrough
+    case 3:
+    fmt.Println('3")
+
+}
+2
+3
+
+A fallthrough statement transfers control to the next case.
+It may be used only as the final statement in a clause.
+
+Exit a switch
+A break statement terminates execution of the innermost for,switch or select statement
+if you need to break out of a surrounding loop not the switch you can put a label on the loop and break of that label.
+Loop:
+    for _, ch := range "a b\nc" {
+        switch ch {
+        case ' ': // skip space
+            break
+        case '\n': // break at newline
+            break Loop
+        default:
+            fmt.Printf("%c\n", ch)
+        }
+    }
+
+
+
+    a
+b
+
+Execution order
+
+function Foo( n int  int {
+    fmt.Println(n)
+    return n
+}
+
+func main() {
+    switch Foo(2)
+
+    case Foo(1),Foo(2),Foo(3) :
+
+    fmt.Println("first case")
+    fallthrough
+    case Foo(4) :
+    fmt.Println("second case")
+}
+2
+1
+2
+First case
+Second case
+
+First the switch expression is evaluated once.
+Then case expressions are evaluated left-to-right and top-to-bottom:
+the first one that equals the switch expression triggers execution of the statements of the associated case,
+the other cases are skipped.
+
+Three component loop
+sum :=0
+for i:=1 ; i<5; i++ {
+    sum +=1
+
+}
+fmt.Println(sum)
+
+1The init statement, i := 1, runs.
+2The condition, i < 5, is computed.
+3If true, the loop body runs,
+otherwise the loop is done.
+The post statement, i++, runs.
+4Back to step 2.
+The scope of i is limited to the loop.
+While loop
+If you skip the init and post statements, you get a while loop.
+
+n := 1
+for n < 5 {
+    n *= 2
+}
+fmt.Println(n) // 8 (1*2*2*2)
+The condition, n < 5, is computed.
+If true, the loop body runs,
+otherwise the loop is done.
+Back to step 1.
+Infinite loop
+If you skip the condition as well, you get an infinite loop.
+
+sum := 0
+for {
+    sum++ // repeated forever
+}
+fmt.Println(sum) // never reached
+For-each loop
+Looping over elements in slices, arrays, maps, channels or strings is often better done with a range loop.
+strings:= []string{ "hello" ,"world"}
+for i,s :=range strings {
+    fmt.Println(i,s)
+
+}
+0 hello
+1 world
+Range statements iterate over slices, arrays, strings, maps or channels.
+a := []string{"Foo", "Bar"}
+for i, s := range a {
+    fmt.Println(i, s)
+}
+
+The range expression, a, is evaluated once before beginning the loop.
+The iteration values are assigned to the respective iteration variables, i and s, as in an assignment statement.
+The second iteration variable is optional.
+If a slice or map is nil, the number of iterations is 0.
+Strings
+For a string, the loop iterates over Unicode code points.
+for i, ch := range "日本語" {
+    fmt.Printf("%#U starts at byte position %d\n", ch, i)
+}
+U+65E5 '日' starts at byte position 0
+U+672C '本' starts at byte position 3
+U+8A9E '語' starts at byte position 6
+
+The index is the first byte of a UTF-8-encoded code point; the second value, of type rune, is the value of the code point.
+For an invalid UTF-8 sequence, the second value will be 0xFFFD, and the iteration will advance a single byte.
+Maps
+The iteration order over maps is not specified and is not guaranteed to be the same from one iteration to the next.
+m := map[string]int{
+    "one":   1,
+    "two":   2,
+    "three": 3,
+}
+for k, v := range m {
+    fmt.Println(k, v)
+}
+two 2
+three 3
+one 1
+
+If a map entry that has not yet been reached is removed during iteration, this value will not be produced.
+If a map entry is created during iteration, that entry may or may not be produced.
+Channels
+For channels, the iteration values are the successive values sent on the channel until closed.
+ch := make(chan int)
+go func() {
+    ch <- 1
+    ch <- 2
+    ch <- 3
+    close(ch)
+}()
+for n := range ch {
+    fmt.Println(n)
+
+    1
+2
+3
+
+For a nil channel, the range loop blocks forever.
+
+Do-while loop in 2 different ways
+yourbasic.org/golang
+
+do {
+    work();
+} while (condition);
+
+for ok := true; ok; ok = condition {
+    work()
+}
+for {
+    work()
+    if !condition {
+        break
+    }
+}
+
+How to use a defer statement
+func main() {
+    defer fmt.Println("World")
+    fmt.Println("Hello")
+}
+Hello
+World
+
+Deferred calls are executed even when the function panics.
+
+func main() {
+    defer fmt.Println("World")
+    panic("Stop")
+    fmt.Println("Hello")
+}World
+panic: Stop
+
+goroutine 1 [running]:
+main.main()
+    ../main.go:3 +0xa0
+
+    Deferred function calls are executed in last-in-first-out order, and a deferred function’s arguments are evaluated when the defer statement executes.
+    func main() {
+    fmt.Println("Hello")
+    for i := 1; i <= 3; i++ {
+        defer fmt.Println(i)
+    }
+    fmt.Println("World")
+}
+
+Hello
+World
+3
+2
+1
+
+Deferred functions may access and modify the surrounding function’s named return parameters.
+func foo() (result string) {
+    defer func() {
+        result = "Change World" // change value at the very last moment
+    }()
+    return "Hello World"
+}
+
+Clean-up
+Defer is commonly used to perform clean-up actions, such as closing a file or unlocking a mutex. In this example defer statements are used to ensure that all files are closed before leaving the CopyFile function, whichever way that happens.
+func CopyFile(dstName, srcName string) (written int64, err error) {
+    src, err := os.Open(srcName)
+    if err != nil {
+        return
+    }
+    defer src.Close()
+
+    dst, err := os.Create(dstName)
+    if err != nil {
+        return
+    }
+    defer dst.Close()
+
+    return io.Copy(dst, src)
+}
+
+Type assertions
+Type assertion provides access to an interface 's concrete valueType assertions 
+A type assertions does not really convert an interface to another data type but it provides an access to an interface 
+concrete value which is typicaly you wantthe type assertion x.9T) assert that the cocrete value stored in x is of type T 
+and tha x is not nil
+if T is not an interface it assert that the dynamic type of x is identical to Tempif T is an interface it asssers that the dynamic type of x implements Temp
+
+var x interface{} ="foo"
+var s string = x.(string)
+fmt.Println(s) //"foo"
+s,ok :=x.(string)
+fmt.println(s,ok)// "foo true 
+n,ok := x.(int)
+fmt.Println(s,ok) // "o false
+n = x.(int)        // ILLEGAL
+panic: interface conversion: interface {} is string, not int
+Type switches
+A type switch performs several type assertions in series and runs the first case with a matching type.
+var x interface{} = "foo"
+
+switch v := x.(type) {
+case nil:
+    fmt.Println("x is nil")            // here v has type interface{}
+case int: 
+    fmt.Println("x is", v)             // here v has type int
+case bool, string:
+    fmt.Println("x is bool or string") // here v has type interface{}
+default:
+    fmt.Println("type unknown")        // here v has type interface{}
+}
+
+x is bool or string
+
+Constructors deconstructed
+Go doesn't have explicit constructors. The idiomatic way to set up new data structures is to use proper zero values coupled with factory functions.
+
+Zero value
+Try to make the default zero value useful and document its behavior. Sometimes this is all that’s needed.
+StopWatch takes advantage of the useful zero values of time.Time, time.Duration and bool.
+In turn, users of StopWatch can benefit from its useful zero value.
+var clock StopWatch // Ready to use, no initialization needed.
+Factory
+If the zero value doesn’t suffice, use factory functions named NewFoo or just New.
+scanner := bufio.NewScanner(os.Stdin)
+err := errors.New("Houston, we have a problem")
+Public vs. private
+yourbasic.org/golang
+PRIVATE KEEP OUT
+A package is the smallest unit of private encap­sulation in Go.
+
+All identifiers defined within a package are visible throughout that package.
+When importing a package you can access only its exported identifiers.
+An identifier is exported if it begins with a capital letter.
+Exported and unexported identifiers are used to describe the public interface of a package and to guard against certain programming errors.
+
+Warning: Unexported identifiers is not a security measure and it does not hide or protect any information.
+package timer
+
+import "time"
+
+// A StopWatch is a simple clock utility.
+// Its zero value is an idle clock with 0 total time.
+type StopWatch struct {
+    start   time.Time
+    total   time.Duration
+    running bool
+}
+
+// Start turns the clock on.
+func (s *StopWatch) Start() {
+    if !s.running {
+        s.start = time.Now()
+        s.running = true
+    }
+}
+The StopWatch and its exported methods can be imported and used in a different package.
+
+package main
+
+import "timer"
+
+func main() {
+    clock := new(timer.StopWatch)
+    clock.Start()
+    if clock.running { // ILLEGAL
+        // …
+    }
+}
+Basic guidelines
+For a given type, don’t mix value and pointer receivers.
+If in doubt, use pointer receivers (they are safe and extendable).
+Pointer receivers
+You must use pointer receivers
+
+if any method needs to mutate the receiver,
+for structs that contain a sync.Mutex or similar synchronizing field (they musn’t be copied).
+You probably want to use pointer receivers
+
+for large structs or arrays (it can be more efficient),
+in all other cases.
+Value receivers
+You probably want to use value receivers
+
+for map, func and chan types,
+for simple basic types such as int or string,
+for small arrays or structs that are value types, with no mutable fields and no pointers.
+You may want to use value receivers
+
+for slices with methods that do not reslice or reallocate the slice.
+Function types and values
+yourbasic.org/golang
+Functions in Go are first class citizens.
+
+Function types and function values can be used and passed around just like other values.
+type Operator func(x float64) float64
+
+// Map applies op to each element of a.
+func Map(op Operator, a []float64) []float64 {
+    res := make([]float64, len(a))
+    for i, x := range a {
+        res[i] = op(x)
+    }
+    return res
+}
+
+func main() {
+    op := math.Abs
+    a := []float64{1, -2}
+    b := Map(op, a)
+    fmt.Println(b) // [1 2]
+
+    c := Map(func(x float64) float64 { return 10 * x }, b)
+    fmt.Println(c) // [10, 20]
+}
+Details
+A function type describes the set of all functions with the same parameter and result types.
+
+The value of an uninitialized variable of function type is nil.
+The parameter names are optional.
+The following two function types are identical.
+
+func(x, y int) int
+func(int, int) int
+
+Anonymous functions and closures
+yourbasic.org/golang
+A function literal (or lambda) is a function without a name.
+In this example a function literal is passed as the less argument to the sort.Slice function.
+func Slice(slice interface{}, less func(i, j int) bool)
+
+people := []string{"Alice", "Bob", "Dave"}
+sort.Slice(people, func(i, j int) bool {
+    return len(people[i]) < len(people[j])
+})
+fmt.Println(people)
+// Output: [Bob Dave Alice]
+You can also use an intermediate variable.
+
+people := []string{"Alice", "Bob", "Dave"}
+less := func(i, j int) bool {
+    return len(people[i]) < len(people[j])
+}
+sort.Slice(people, less)
+Note that the less function is a closure: it references the people variable, which is declared outside the function.
+
+Closures
+Function literals in Go are closures: they may refer to variables defined in an enclosing function. Such variables
+
+are shared between the surrounding function and the function literal,
+survive as long as they are accessible.
+In this example, the function literal uses the local variable n from the enclosing scope to count the number of times it has been invoked.
+
+// New returns a function Count.
+// Count prints the number of times it has been invoked.
+func New() (Count func()) {
+    n := 0
+    return func() {
+        n++
+        fmt.Println(n)
+    }
+}
+
+func main() {
+    f1, f2 := New(), New()
+    f1() // 1
+    f2() // 1 (different n)
+    f1() // 2
+    f2() // 2
+}
