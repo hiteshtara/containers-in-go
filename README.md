@@ -2274,3 +2274,145 @@ func init() {
     numcpu := runtime.NumCPU()
     runtime.GOMAXPROCS(numcpu) // Try to use all available CPUs.
 }
+Dependency injection principle
+a top layer containing poem documents
+a bogtom layer containing storage entities
+a document object needs to access the sercicse of storage object tostore and retrieve the contents .Thus it would seem naturla to add a storage service directly to the document
+poet surely need to write poems to a small notebook thus the lead programmer creates the document layer
+type Poem struct {
+content []byte
+storage acmeStorageSrevices.PoemNoteBook
+}
+
+func NewPoem() *Poem {
+return &Poem {
+storage : acmeStorageServices.NewPoemNoteBook(),
+}
+}
+
+func (p* Poem) Load(title string) {
+p.content = p.storage.Load(title)
+}
+func (p* Poem) Save(title string) {
+storage.save(title, p.content)
+}
+what if poet decides to write a poem on a napkin .The document layer has to be modified .We have created an unwanted dependincy on a particula r
+storage type
+Abstraction to the rescue
+we replace the storage service by the abstraction of that service
+type PoemStorage interface {
+Load(String) []byte
+Save (string, []byte)
+
+}
+
+thus interface describes only a behavior and our poem object can call the interface functions without worringg about the object that implemnts this uinterface
+so  now we can define the Poem struct withour any dependency on the storage layer
+type Poem struct {
+content [] byte
+storage PoemStorage
+
+}
+we can now assign any type to storage that satisfy this interface
+
+Adding Dependency injection
+right now the poem only talks to an empty abstraction .Next step we need a way to connect the real storage to the poem
+in the other words we need to inject a dependency on the Poemstorage object into the Poem Layer
+we can d this for example through a constructer
+
+ func NePoem (ps *PoemStorage) *Poem {
+ return &Poem {
+ storage:ps
+ }
+ }
+ when called the constructer recevies an actual PoemStorage object .Yet the returned Poem still just talks to the abstract PoemStorage interface
+
+ finally in main we can wire up all the higher level objects with their low level dependencies
+ func main() {
+ storage := newNapkin()
+ poem:newPoem(sorage)
+
+ }
+ package main
+
+
+
+ // full code
+ import "fmt"
+ The “inner ring”
+ A Poem contains some poetry and an abstract storage reference.
+ type Poem struct {
+ 	content []byte
+ 	storage PoemStorage
+ }
+ PoemStorage is just an interface that defines the behavior of a poem storage. This is all that Poem knows (and needs to know) about storing and retrieving poems. Nothing from the “outer ring” appears here.
+ type PoemStorage interface {
+ 	Type() string        // Return a string describing the storage type.
+ 	Load(string) []byte  // Load a poem by name.
+ 	Save(string, []byte) // Save a poem by name.
+ }
+ NewPoem constructs a Poem object. We use this constructor to inject an object that satisfies the PoemStorage interface.
+ func NewPoem(ps PoemStorage) *Poem {
+ 	return &Poem{
+ 		content: []byte("I am a poem from a " + ps.Type() + "."),
+ 		storage: ps,
+ 	}
+ }
+ Save simply calls Save on the interface type. The Poem object neither knows nor cares about which actual storage object receives this method call.
+ func (p *Poem) Save(name string) {
+ 	p.storage.Save(name, p.content)
+ }
+ Load also invokes the injected storage object without knowing it.
+ func (p *Poem) Load(name string) {
+ 	p.content = p.storage.Load(name)
+ }
+ String makes Poem a Stringer, allowing us to drop it anywhere a string would be expected.
+ func (p *Poem) String() string {
+ 	return string(p.content)
+ }
+ The “outer ring”
+ The notebook
+ A Notebook is the classic storage device of a poet.
+ type Notebook struct {
+ 	poems map[string][]byte
+ }
+
+ func NewNotebook() *Notebook {
+ 	return &Notebook{
+ 		poems: map[string][]byte{},
+ 	}
+ }
+ After adding Save and Load, Notebook implicitly satisfies PoemStorage.
+ func (n *Notebook) Save(name string, contents []byte) {
+ 	n.poems[name] = contents
+ }
+
+ func (n *Notebook) Load(name string) []byte {
+ 	return n.poems[name]
+ }
+ Type returns an informal description of the storage type.
+ func (n *Notebook) Type() string {
+ 	return "Notebook"
+ }
+ A Napkin is the emergency storage device of a poet. It can store only one poem.
+ type Napkin struct {
+ 	poem []byte
+ }
+
+ func NewNapkin() *Napkin {
+ 	return &Napkin{
+ 		poem: []byte{},
+ 	}
+ }
+
+ func (n *Napkin) Save(name string, contents []byte) {
+ 	n.poem = contents
+ }
+
+ func (n *Napkin) Load(name string) []byte {
+ 	return n.poem
+ }
+
+ func (n *Napkin) Type() string {
+ 	return "Napkin"
+ }
